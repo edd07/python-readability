@@ -1,6 +1,7 @@
 import re
 from .url_helpers import absolute_url
-from .BeautifulSoup import BeautifulSoup, HTMLParseError, UnicodeDammit
+from bs4 import BeautifulSoup, UnicodeDammit
+from html.parser import HTMLParseError
 from logging import error
 
 __all__ = [

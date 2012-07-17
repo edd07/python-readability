@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from .BeautifulSoup import NavigableString
+from bs4 import NavigableString
 from .page_parser import parse, get_title, get_body, Unparseable
 import logging
 import re
@@ -172,11 +172,13 @@ class Document:
 	def class_weight(self, e):
 		weight = 0
 		if e.get('class', None):
-			if REGEXES['negativeRe'].search(e['class']):
-				weight -= 25
-
-			if REGEXES['positiveRe'].search(e['class']):
-				weight += 25
+			for i in e['class']:
+				
+				if REGEXES['negativeRe'].search(i):
+					weight -= 25
+	
+				if REGEXES['positiveRe'].search(i):
+					weight += 25
 
 		if e.get('id', None):
 			if REGEXES['negativeRe'].search(e['id']):
@@ -234,6 +236,7 @@ class Document:
 		# Conditionally clean <table>s, <ul>s, and <div>s
 		for el in self.tags(node, "table", "ul", "div"):
 			weight = self.class_weight(el)
+				
 			el_key = HashableElement(el)
 			if el_key in candidates:
 				content_score = candidates[el_key]['content_score']
