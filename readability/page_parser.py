@@ -1,6 +1,6 @@
 import re
-from url_helpers import absolute_url
-from BeautifulSoup import BeautifulSoup, HTMLParseError, UnicodeDammit
+from .url_helpers import absolute_url
+from .BeautifulSoup import BeautifulSoup, HTMLParseError, UnicodeDammit
 from logging import error
 
 __all__ = [
@@ -19,13 +19,13 @@ def parse(raw_content, base_href=None, notify=lambda x: None):
 	for parse_method in _parse_methods():
 		try:
 			return parse_method(raw_content, base_href)
-		except HTMLParseError, e:
+		except HTMLParseError as e:
 			notify("parsing (%s) failed: %s" % (parse_method.__name__, e))
 			continue
 	raise Unparseable()
 
 def get_title(soup):
-	title = unicode(getattr(soup.title, 'string', ''))
+	title = str(getattr(soup.title, 'string', ''))
 	if not title:
 		return None
 	return normalize_spaces(title)
@@ -33,7 +33,7 @@ def get_title(soup):
 
 def get_body(soup):
 	[ elem.extract() for elem in soup.findAll(['script', 'link', 'style']) ]
-	raw_html = unicode(soup.body or soup)
+	raw_html = str(soup.body or soup)
 	cleaned = clean_attributes(raw_html)
 	try:
 		BeautifulSoup(cleaned)

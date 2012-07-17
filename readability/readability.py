@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from BeautifulSoup import NavigableString
-from page_parser import parse, get_title, get_body, Unparseable
+from .BeautifulSoup import NavigableString
+from .page_parser import parse, get_title, get_body, Unparseable
 import logging
 import re
 
@@ -34,7 +34,7 @@ class Document:
 	def __init__(self, input, notify=None, **options):
 		self.input = input
 		self.options = defaultdict(lambda: None)
-		for k, v in options.items():
+		for k, v in list(options.items()):
 			self.options[k] = v
 		self.notify = notify or logging.info
 		self.html = None
@@ -79,7 +79,7 @@ class Document:
 					continue # try again
 				else:
 					return cleaned_article
-		except StandardError, e:
+		except Exception as e:
 			logging.exception('error getting summary:')
 			raise Unparseable(str(e))
 
@@ -115,7 +115,7 @@ class Document:
 		return output
 
 	def select_best_candidate(self, candidates):
-		sorted_candidates = sorted(candidates.values(), key=lambda x: x['content_score'], reverse=True)
+		sorted_candidates = sorted(list(candidates.values()), key=lambda x: x['content_score'], reverse=True)
 		self.debug("Top 5 candidates:")
 		for candidate in sorted_candidates[:5]:
 			elem = candidate['elem']
@@ -163,7 +163,7 @@ class Document:
 
 		# Scale the final candidates score based on link density. Good content should have a
 		# relatively small link density (5% or less) and be mostly unaffected by this operation.
-		for elem, candidate in candidates.items():
+		for elem, candidate in list(candidates.items()):
 			candidate['content_score'] *= (1 - self.get_link_density(elem))
 			self.debug("candidate %s scored %s" % (describe(elem), candidate['content_score']))
 
@@ -215,7 +215,7 @@ class Document:
 		for elem in self.html.findAll():
 			if elem.name.lower() == "div":
 				# transform <div>s that do not contain other block elements into <p>s
-				if REGEXES['divToPElementsRe'].search(''.join(map(unicode, elem.contents))):
+				if REGEXES['divToPElementsRe'].search(''.join(map(str, elem.contents))):
 					self.debug("Altering div(#%s.%s) to p" % (elem.get('id', ''), elem.get('class', '')))
 					elem.name = "p"
 
@@ -287,7 +287,7 @@ class Document:
 			if not (self.options['attributes']):
 				el.attrMap = {}
 
-		return unicode(node)
+		return str(node)
 
 class HashableElement():
 	def __init__(self, node):
@@ -330,12 +330,12 @@ def main():
 
 	file = None
 	if options.url:
-		import urllib
-		file = urllib.urlopen(options.url)
+		import urllib.request, urllib.parse, urllib.error
+		file = urllib.request.urlopen(options.url)
 	else:
 		file = open(args[0])
 	try:
-		print Document(file.read(), debug=options.verbose).summary().encode('ascii','ignore')
+		print(Document(file.read(), debug=options.verbose).summary().encode('ascii','ignore'))
 	finally:
 		file.close()
 
